@@ -38,7 +38,7 @@ namespace CourseProjectNew.Employees.Controllers
         [HttpGet("byFlight/{flightId}")]
         public async Task<IActionResult> GetEmployeesByFlight(int flightId)
         {
-            var employees = await _context.Flights.Select(x => x.Brigade.Employees).ToListAsync();
+            var employees = await _context.Flights.Where(x => x.Id == flightId).Select(x => x.Brigade.Employees).ToListAsync();
             return Ok(employees);
         }
         [HttpGet("byBrigade/{brigadeId}")]
