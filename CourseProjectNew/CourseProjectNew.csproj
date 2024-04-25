@@ -14,4 +14,8 @@
     <ProjectReference Include="..\CourseDb\CourseDb.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Flights\" />
+  </ItemGroup>
+
 </Project>

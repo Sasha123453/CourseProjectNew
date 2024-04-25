@@ -4,101 +4,168 @@ using CourseProjectNew.Common.Filters;
 using CourseProjectNew.Employees.Enum;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace CourseProjectNew.Employees.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class EmployeeController : ControllerBase
+    namespace CourseProjectNew.Employees.Controllers
     {
-        private readonly ApplicationContext _context;
-        public EmployeeController(ApplicationContext context)
+        [Route("api/[controller]")]
+        [ApiController]
+        public class EmployeeController : ControllerBase
         {
-            _context = context;
-        }
-        [HttpGet("departmentHeads")]
-        public async Task<IActionResult> GetDepartmentHeads()
-        {
-            var departmentHeads = await _context.Departments.Select(d => d.DepartmentHead).ToListAsync();
-            return Ok(departmentHeads);
-        }
-        [HttpGet("allEmployees")]
-        public async Task<IActionResult> GetAllEmployees()
-        {
-            var employees = await _context.Employees.ToListAsync();
-            return Ok(employees);
-        }
-        [HttpPost("filtered")]
-        public async Task<IActionResult> GetEmployeesFiltered(Dictionary<EmployeeFilterFields, Filter> map)
-        {
-            var converted = ConvertMapToDictionary(map);
-            var employees = await _context.Employees.FilterByDictionary(converted).ToListAsync();
-            return Ok(employees);
-        }
-        [HttpGet("byFlight/{flightId}")]
-        public async Task<IActionResult> GetEmployeesByFlight(int flightId)
-        {
-            var employees = await _context.Flights.Where(x => x.Id == flightId).Select(x => x.Brigade.Employees).ToListAsync();
-            return Ok(employees);
-        }
-        [HttpGet("byBrigade/{brigadeId}")]
-        public async Task<IActionResult> GetEmployeesByBrigade(int brigadeId, [FromQuery]int age)
-        {
-            var query = _context.Brigades.Where(x => x.Id == brigadeId).SelectMany(x => x.Employees);
-            if (age != 0)
+            private readonly ApplicationContext _context;
+            public EmployeeController(ApplicationContext context)
             {
-                query = query.Where(x => x.DateOfBirth.AddYears(-age) > x.DateOfBirth);
+                _context = context;
             }
-            var employees = await query.ToListAsync();
-            return Ok(employees);
-        }
-        [HttpGet("pilotsByMedicalWatch")]
-        public async Task<IActionResult> GetPilotsByMedicalWatch(Dictionary<EmployeeFilterFields, Filter> map, bool hasPassedMedicalWatch, int year)
-        {
-            var converted = ConvertMapToDictionary(map);
-            var query = _context.Employees.Join(_context.MedicalWatches, e => e.Id, mw => mw.EmployeeId, (e, mw) => new { e, mw })
-                .Where(x => x.mw.BeginTime.Year == year)
-                .FilterByDictionary(converted);
-            query = (hasPassedMedicalWatch) ? query.Where(x => x.mw == null) : query.Where(x => x.mw != null);
-            var employees = await query.Select(x => x.e).ToListAsync();
-            return Ok(employees);
-        }
 
-        private Dictionary<string, Filter> ConvertMapToDictionary(Dictionary<EmployeeFilterFields, Filter> map)
-        {
-            var dictionary = new Dictionary<string, Filter>();
-            foreach (var key in map.Keys)
+            [HttpGet("allEmployees")]
+            public async Task<IActionResult> GetAllEmployees()
             {
-                var newKey = GetKey(key);
-                var filter = map[key];
-                if (key == EmployeeFilterFields.WorkExperience)
-                {
-                    foreach (var filterValue in filter.FilterValues)
-                    {
-                        var years = Convert.ToInt32(filterValue.Value);
-                        filterValue.Value = DateTime.Now.AddYears(-years).ToLongDateString();
-                    }
-                }
+                var employees = await _context.Employees.ToListAsync();
+                return Ok(employees);
             }
-            return dictionary;
-        }
-        private string GetKey(EmployeeFilterFields key)
-        {
-            switch (key)
+
+            [HttpGet("departmentHeads")]
+            public async Task<IActionResult> GetDepartmentHeads()
             {
-                case EmployeeFilterFields.Salary:
-                    return "Salary";
-                case EmployeeFilterFields.WorkExperience:
-                    return "WorkingScince";
-                case EmployeeFilterFields.Gender:
-                    return "Gender";
-                case EmployeeFilterFields.AmountOfKids:
-                    return "AmountOfKids";
-                case EmployeeFilterFields.Department:
-                    return "DepartmentId";
-                default:
-                    throw new NotImplementedException();
+                var departmentHeads = await _context.Departments.Select(d => d.DepartmentHead).ToListAsync();
+                return Ok(departmentHeads);
             }
+
+            [HttpGet("byDepartment/{departmentId}")]
+            public async Task<IActionResult> GetEmployeesByDepartment(int departmentId)
+            {
+                var employees = await _context.Departments.Where(x => x.Id == departmentId).SelectMany(x => x.Employees).ToListAsync();
+                return Ok(employees);
+            }
+
+            [HttpGet("byExperience/{years}")]
+            public async Task<IActionResult> GetEmployeesByExperience(int years)
+            {
+                var date = DateOnly.FromDateTime(DateTime.Now.AddYears(-years));
+                var employees = await _context.Employees.Where(e => e.WorkingSince <= date).ToListAsync();
+                return Ok(employees);
+            }
+
+            [HttpGet("byGender/{gender}")]
+            public async Task<IActionResult> GetEmployeesByGender(string gender)
+            {
+                var employees = await _context.Employees.Where(e => e.Gender == gender).ToListAsync();
+                return Ok(employees);
+            }
+
+            [HttpGet("byAge/{age}")]
+            public async Task<IActionResult> GetEmployeesByAge(int age)
+            {
+                var date = DateOnly.FromDateTime(DateTime.Now.AddYears(-age));
+                var employees = await _context.Employees.Where(e => e.DateOfBirth <= date).ToListAsync();
+                return Ok(employees);
+            }
+
+            [HttpGet("byChildren/{hasChildren}")]
+            public async Task<IActionResult> GetEmployeesByChildren(bool hasChildren)
+            {
+                var employees = hasChildren ?
+                    await _context.Employees.Where(e => e.AmountOfKids > 0).ToListAsync() :
+                    await _context.Employees.Where(e => e.AmountOfKids == 0).ToListAsync();
+                return Ok(employees);
+            }
+
+            [HttpGet("bySalary/{salary}")]
+            public async Task<IActionResult> GetEmployeesBySalary(decimal salary)
+            {
+                var employees = await _context.Employees.Where(e => e.Salary == salary).ToListAsync();
+                return Ok(employees);
+            }
+            [HttpGet("byBrigade/{brigadeId}")]
+            public async Task<IActionResult> GetEmployeesByBrigade(int brigadeId)
+            {
+                var employees = await _context
+                    .Brigades
+                    .Include(x => x.Employees)
+                    .Where(x => x.Id == brigadeId)
+                    .SelectMany(x => x.Employees)
+                    .ToListAsync();
+                return Ok(employees);
+            }
+
+            [HttpGet("byFlight/{flightId}")]
+            public async Task<IActionResult> GetEmployeesByFlight(int flightId)
+            {
+                var employees = await _context
+                    .Flights
+                    .Where(x => x.Id == flightId)
+                    .SelectMany(x => x.Brigade.Employees)
+                    .ToListAsync();
+                return Ok(employees);
+            }
+            [HttpGet("byBrigadeSalary/{brigadeId}/{salary}")]
+            public async Task<IActionResult> GetEmployeesByBrigadeAndSalary(int brigadeId, decimal salary)
+            {
+                var employees = await _context
+                    .Brigades
+                    .Include(x => x.Employees)
+                    .Where(x => x.Id == brigadeId)
+                    .SelectMany(x => x.Employees.Where(e => e.Salary == salary))
+                    .ToListAsync();
+                return Ok(employees);
+            }
+
+            [HttpGet("byBrigadeAge/{brigadeId}/{age}")]
+            public async Task<IActionResult> GetEmployeesByBrigadeAndAge(int brigadeId, int age)
+            {
+                var date = DateOnly.FromDateTime(DateTime.Now.AddYears(-age));
+                var employees = await _context
+                    .Brigades
+                    .Include(x => x.Employees)
+                    .Where(x => x.Id == brigadeId)
+                    .SelectMany(x => x.Employees.Where(e => e.DateOfBirth <= date))
+                    .ToListAsync();
+                return Ok(employees);
+            }
+            [HttpGet("pilotsByMedicalCheck/{year}/{passed}")]
+            public async Task<IActionResult> GetPilotsByMedicalCheck(int year, bool passed)
+            {
+                var pilots = await _context.Employees
+                    .Where(x => x.JobTitle == "Pilot")
+                    .Join(_context.MedicalWatches, x => x.Id, y => y.Employee.Id, (x, y) => new { x, y })
+                    .Where(pair => pair.y.BeginTime.Date.Year == year)
+                    .Where(pair => (pair.y != null) == passed)
+                    .Select(d => d.x)
+                    .ToListAsync();
+                return Ok(pilots);
+            }
+
+            [HttpGet("pilotsByGender/{gender}")]
+            public async Task<IActionResult> GetPilotsByGender(string gender)
+            {
+                var pilots = await _context.Employees
+                    .Where(e => e.JobTitle == "Pilot" && e.Gender == gender)
+                    .ToListAsync();
+                return Ok(pilots);
+            }
+
+            [HttpGet("pilotsByAge/{age}")]
+            public async Task<IActionResult> GetPilotsByAge(int age)
+            {
+                var date = DateOnly.FromDateTime(DateTime.Now.AddYears(-age));
+                var pilots = await _context.Employees
+                    .Where(e => e.JobTitle == "Pilot" && e.DateOfBirth <= date)
+                    .ToListAsync();
+                return Ok(pilots);
+            }
+
+            [HttpGet("pilotsBySalary/{salary}")]
+            public async Task<IActionResult> GetPilotsBySalary(decimal salary)
+            {
+                var pilots = await _context.Employees
+                    .Where(e => e.JobTitle == "Pilot" && e.Salary == salary)
+                    .ToListAsync();
+                return Ok(pilots);
+            }
+
         }
     }
 }

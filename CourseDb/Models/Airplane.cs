@@ -10,5 +10,7 @@ namespace CourseProjectDb.Models
         public DateOnly ReleaseDate { get; set; }
         public AirplaneStatus AirplaneStatus { get; set; }
         public int FlightsCount { get; set; }
+        public TimeOnly ArrivalTime { get; set; }
+        public TimeOnly DepartureTime { get; set; }
     }
 }

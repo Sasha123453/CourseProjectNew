@@ -7,9 +7,7 @@
         public string FirstName { get; set; }
         public string Surname { get; set; }
         public string JobTitle { get; set; }
-        public Department Department { get; set; }
-        public int DepartmentId { get; set; }
-        public DateOnly WorkingScince { get; set; }
+        public DateOnly WorkingSince { get; set; }
         public string Gender { get; set; }
         public DateOnly DateOfBirth { get; set; }
         public int AmountOfKids { get; set; }

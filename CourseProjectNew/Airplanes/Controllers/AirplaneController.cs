@@ -13,17 +13,16 @@ namespace CourseProjectNew.Airplanes.Controllers
         {
             _context = context;
         }
-        [HttpGet("all")]
-        public async Task<IActionResult> GetAllAirplanes()
+        [HttpGet("byAirportAndTime/{time}")]
+        public async Task<IActionResult> GetAirplanesByAirportAndTime(TimeOnly time)
         {
-            var airplanes = await _context.Airplanes.ToListAsync();
+            var airplanes = await _context.Airplanes
+                .Where(a => a.ArrivalTime <= time && a.DepartureTime > time)
+                .OrderBy(a => a.ArrivalTime)
+                .ThenByDescending(a => a.FlightsCount)
+                .ToListAsync();
             return Ok(airplanes);
         }
-        [HttpGet("bytimeandamount")]
-        public async Task<IActionResult> ActionResult(TimeOnly time, int amount)
-        {
-            var airplanes = await _context.Flights.Where(x => x.Airplane.FlightsCount >= amount && x.CurrentFlightTime.ArrivalTime == time).Select(x => x.Airplane).ToListAsync();
-            return Ok(airplanes);
-        }
+
     }
 }
