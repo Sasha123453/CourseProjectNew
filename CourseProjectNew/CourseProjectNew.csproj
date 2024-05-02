@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Flights\" />
+    <Folder Include="Новая папка\" />
   </ItemGroup>
 
 </Project>

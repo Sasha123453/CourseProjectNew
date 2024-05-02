@@ -23,12 +23,11 @@ namespace CourseProjectNew
 
                 var airplanes = new List<Airplane>
                 {
-                    new Airplane { AirplaneType = airplaneTypes[0], Name = "Airbus A320", ReleaseDate = DateOnly.FromDateTime(new DateTime(2000, 1, 1)), AirplaneStatus = AirplaneStatus.InAirport, FlightsCount = 0, ArrivalTime = new TimeOnly(10, 0, 0), DepartureTime = new TimeOnly(12, 0, 0) },
-                    new Airplane { AirplaneType = airplaneTypes[1], Name = "Boeing 747", ReleaseDate = DateOnly.FromDateTime(new DateTime(2005, 1, 1)), AirplaneStatus = AirplaneStatus.InAirport, FlightsCount = 0, ArrivalTime = new TimeOnly(14, 0, 0), DepartureTime = new TimeOnly(16, 0, 0) },
-                    new Airplane { AirplaneType = airplaneTypes[2], Name = "Airbus A380", ReleaseDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1)), AirplaneStatus = AirplaneStatus.InAirport, FlightsCount = 0, ArrivalTime = new TimeOnly(18, 0, 0), DepartureTime = new TimeOnly(20, 0, 0) },
-                    new Airplane { AirplaneType = airplaneTypes[3], Name = "Boeing 777", ReleaseDate = DateOnly.FromDateTime(new DateTime(2015, 1, 1)), AirplaneStatus = AirplaneStatus.InAirport, FlightsCount = 0, ArrivalTime = new TimeOnly(22, 0, 0), DepartureTime = new TimeOnly(0, 0, 0) }
+                    new Airplane { AirplaneType = airplaneTypes[0], Name = "Airbus A320", ReleaseDate = DateOnly.FromDateTime(new DateTime(2000, 1, 1)), AirplaneStatus = AirplaneStatus.InAirport, FlightsCount = 0, ArrivalTime = new TimeOnly(10, 0, 0), DepartureTime = new TimeOnly(12, 0, 0), SeatsCount = 50 },
+                    new Airplane { AirplaneType = airplaneTypes[1], Name = "Boeing 747", ReleaseDate = DateOnly.FromDateTime(new DateTime(2005, 1, 1)), AirplaneStatus = AirplaneStatus.InAirport, FlightsCount = 0, ArrivalTime = new TimeOnly(14, 0, 0), DepartureTime = new TimeOnly(16, 0, 0), SeatsCount = 75 },
+                    new Airplane { AirplaneType = airplaneTypes[2], Name = "Airbus A380", ReleaseDate = DateOnly.FromDateTime(new DateTime(2010, 1, 1)), AirplaneStatus = AirplaneStatus.InAirport, FlightsCount = 0, ArrivalTime = new TimeOnly(18, 0, 0), DepartureTime = new TimeOnly(20, 0, 0), SeatsCount = 125 },
+                    new Airplane { AirplaneType = airplaneTypes[3], Name = "Boeing 777", ReleaseDate = DateOnly.FromDateTime(new DateTime(2015, 1, 1)), AirplaneStatus = AirplaneStatus.InAirport, FlightsCount = 0, ArrivalTime = new TimeOnly(22, 0, 0), DepartureTime = new TimeOnly(0, 0, 0), SeatsCount = 100 }
                 };
-
                 context.Airplanes.AddRange(airplanes);
                 context.SaveChanges();
             }
@@ -140,6 +139,68 @@ namespace CourseProjectNew
                 context.SaveChanges();
             }
         }
+        public static void SeedPassengers(ApplicationContext context)
+        {
+            if (!context.Passengers.Any())
+            {
+                var passengers = new List<Passenger>();
+                for (int i = 0; i < 100; i++)
+                {
+                    passengers.Add(new Passenger
+                    {
+                        Name = $"Passenger{i}",
+                        FirstName = $"FirstName{i}",
+                        SecondName = $"SecondName{i}",
+                        LastName = $"LastName{i}",
+                        PassportNumber = i,
+                        InternationalPassport = i,
+                        Tickets = new List<Ticket>()
+                    });
+                }
+
+                context.Passengers.AddRange(passengers);
+                context.SaveChanges();
+            }
+        }
+        public static void SeedFlights(ApplicationContext context)
+        {
+            var brigades = context.Brigades.ToList();
+            var airplanes = context.Airplanes.ToList();
+            var passengers = context.Passengers.ToList();
+            foreach (var airplane in airplanes)
+            {
+                airplane.Flights = new List<Flight>();
+                for (int i = 0; i < 10; i++)
+                {
+                    var flight = new Flight
+                    {
+                        DepartureDays = (DaysOfWeek)(1 << i % 7),
+                        Airplane = airplane,
+                        Brigade = brigades[i % brigades.Count], // Используем бригады
+                        FlightType = FlightType.Domestic,
+                        FlightStatus = FlightStatus.Scheduled,
+                        Origin = "Origin" + i,
+                        Destination = "Destination" + i,
+                        Tickets = new List<Ticket>()
+                    };
+
+                    foreach (var passenger in passengers.Skip(i * 10).Take(10))
+                    {
+                        flight.Tickets.Add(new Ticket
+                        {
+                            Passenger = passenger,
+                            SoldTime = DateTime.Now.AddMonths(-i),
+                            Status = TicketStatus.Available,
+                            Price = 125
+                        });
+                    }
+
+                    airplane.Flights.Add(flight);
+                }
+            }
+            context.SaveChanges();
+        }
+        
     }
 
 }

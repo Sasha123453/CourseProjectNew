@@ -15,8 +15,11 @@ namespace CourseProjectDb.Models
         public Brigade Brigade { get; set; }
         public FlightType FlightType { get; set; }
         public List<Ticket> Tickets { get; set; }
-        public List<FlightTime> FlightTimes { get; set; }
-        public FlightTime CurrentFlightTime { get; set; }
+        public DateTime? DelayStartTime { get; set; }
+        public DateTime? DelayEndTime { get; set; }
+        public List<FlightPath> FlightPaths { get; set; }
+        public FlightStatus FlightStatus { get; set; }
+        public string? DelayReason { get; set; }
         public string Origin { get; set; }
         public string Destination { get; set; }
     }

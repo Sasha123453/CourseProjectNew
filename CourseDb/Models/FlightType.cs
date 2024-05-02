@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CourseProjectDb.Models
+﻿namespace CourseDb.Models
 {
-    public class FlightType
+    public enum FlightType
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public List<Flight> Flights { get; set; }
+        Domestic,
+        International
     }
 }

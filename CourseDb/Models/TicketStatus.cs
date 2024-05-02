@@ -8,6 +8,7 @@ namespace CourseProjectDb.Models
 {
     public enum TicketStatus
     {
+        Available,
         Booked,
         Bought,
         Cancelled,

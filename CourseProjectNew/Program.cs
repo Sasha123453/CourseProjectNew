@@ -28,6 +28,8 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
     DbSeeder.SeedAirplaneTypes(dbContext);
     DbSeeder.SeedDepartments(dbContext);
+    DbSeeder.SeedPassengers(dbContext);
+    DbSeeder.SeedFlights(dbContext);
 }
 app.UseHttpsRedirection();
 
